@@ -22,6 +22,11 @@
 
 #define SIZE_OF_RGBA 4;
 
+uint8_t *getBitArray(int size)
+{
+  return (uint8_t *)malloc(ceil(size / 8));
+}
+
 void setBit(uint8_t array[], int k)
 {
   int index = k / 8;
@@ -76,11 +81,11 @@ pixelDataXOR(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 }
 
 EM_PORT_API(uint8_t *)
-pixelDataToByte(uint8_t pixelData[], int width, int height)
+pixelDataToBit(uint8_t pixelData[], int width, int height)
 {
   const int arraySize = width * height;
   const int pixelArraySize = arraySize * SIZE_OF_RGBA;
-  uint8_t *array = (uint8_t *)malloc(arraySize);
+  uint8_t *array = getBitArray(arraySize);
 
   memset(array, 0, arraySize);
 
@@ -93,6 +98,19 @@ pixelDataToByte(uint8_t pixelData[], int width, int height)
   }
 
   return array;
+}
+
+EM_PORT_API(uint8_t *)
+drawBorderFromPixelData(uint8_t pixelData[], int width, int height)
+{
+  const uint8_t bitArray = pixelDataToBit(pixelData, width, height);
+  const uint8_t borderArray = (uint8_t *)malloc(width * height * sizeof(uint8_t));
+
+  for (int i = 0; i < width * height; i++)
+  {
+  }
+
+  return borderArray;
 }
 
 void main()
