@@ -1,249 +1,215 @@
-// // @ts-check
+// @ts-check
 
-// console.log('3');
+const removeDuplicateAndZero = (arr) => {
+  return arr.filter((value, index) => {
+    return arr.indexOf(value) === index && value !== 0;
+  });
+}
 
-// const xorTemplate = [
-//   0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
-//   0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
-//   0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-//   0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-//   0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
-//   0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
-//   0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-//   0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-//   1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
-//   1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-// ];
-// const xorArray = []; // 320 * 320
-// const width = 320;
-// const height = xorArray.length / width;
+const func = (xorArray, width, height) => {
+  const classArray = (new Array((width + 2) * (height + 2))).fill(0);
+  const connects = [];
+  const borders = {};
+  let amount = 0;
 
-// for (let i = 0; i < 512; i += 1) {
-//   xorArray.push(...xorTemplate);
-// }
+  const borderConnect = (...val) => {
+    const arr = removeDuplicateAndZero(val)
 
-// // const xorArray = xorTemplate;
-// // const width = 20;
-// // const height = xorArray.length / width;
+    if (arr.length > 1) connects.push(arr);
+  }
 
-// const removeDuplicateAndZero = (arr) => {
-//   return arr.filter((value, index) => {
-//     return arr.indexOf(value) === index && value !== 0;
-//   })
-// }
+  const getClassValue = (x, y) => classArray[x + 1 + (width + 2) * (y + 1)];
 
+  const setClassValue = (x, y, val) => {
+    classArray[x + 1 + (width + 2) * (y + 1)] = val;
+  }
 
-// const func = () => {
-//   const classArray = (new Array(width * height)).fill(0);
-//   const connects = [];
-//   const borders = {};
-//   let amount = 0;
+  const getXorValue = (x, y) => {
+    return (x >= width || y >= height || x < 0 || y < 0) ? 0 : xorArray[x + width * y];
+  }
 
-//   const borderConnect = (...val) => {
-//     const arr = removeDuplicateAndZero(val)
+  const connectBoard = () => {
+    connects.forEach((connect) => {
+      let [target, merge] = connect;
 
-//     if (arr.length > 1) connects.push(arr);
-//   }
+      if (target < merge) {
+        const tmp = target;
 
-//   const getClassValue = (x, y) => {
-//     return (x >= width || y >= height || x < 0 || y < 0) ? 0 : classArray[x + width * y];
-//   }
+        target = merge;
 
-//   const getXorValue = (x, y) => {
-//     return (x >= width || y >= height || x < 0 || y < 0) ? 0 : xorArray[x + width * y];
-//   }
+        merge = tmp;
+      }
 
-//   const connectBoard = () => {
-//     connects.forEach((connect) => {
-//       const [target, merge] = connect;
-//       const tar = borders[target];
-//       const mer = borders[merge];
+      const tar = borders[target];
+      const mer = borders[merge];
 
-//       if (mer.isMerged === true) {
-//         return;
-//       }
+      if (mer.isMerged === true) {
+        return;
+      }
 
-//       tar.mergeWith.push(merge, ...mer.mergeWith);
+      tar.mergeWith.push(merge, ...mer.mergeWith);
 
-//       mer.isMerged = true;
-//     })
-//   }
+      mer.isMerged = true;
+    })
+  }
 
-//   const compareBorder = (collection) => {
-//     return collection.reduce(([prevLeft, prevRight, prevTop, prevBottom], curr) => {
-//       const { left, right, top, bottom } = borders[curr];
+  const compareBorder = (collection) => {
+    return collection.reduce(([prevLeft, prevRight, prevTop, prevBottom], curr) => {
+      const { left, right, top, bottom } = borders[curr];
 
-//       left.forEach((val) => {
-//         if (val < prevLeft) {
-//           prevLeft = val;
-//         }
-//       })
+      left.forEach((val) => {
+        if (val < prevLeft) {
+          prevLeft = val;
+        }
+      })
 
-//       right.forEach((val) => {
-//         if (val > prevRight) {
-//           prevRight = val;
-//         }
-//       })
+      right.forEach((val) => {
+        if (val > prevRight) {
+          prevRight = val;
+        }
+      })
 
-//       top.forEach((val) => {
-//         if (val < prevTop) {
-//           prevTop = val;
-//         }
-//       })
+      top.forEach((val) => {
+        if (val < prevTop) {
+          prevTop = val;
+        }
+      })
 
-//       bottom.forEach((val) => {
-//         if (val > prevBottom) {
-//           prevBottom = val;
-//         }
-//       })
+      bottom.forEach((val) => {
+        if (val > prevBottom) {
+          prevBottom = val;
+        }
+      })
 
-//       return [prevLeft, prevRight, prevTop, prevBottom];
-//     }, [width, 0, height, 0])
-//   }
+      return [prevLeft, prevRight, prevTop, prevBottom];
+    }, [width, 0, height, 0])
+  }
 
-//   const compareAndSortBorder = () => {
-//     const sortedBorderArray = [];
+  const compareAndSortBorder = () => {
+    const sortedBorderArray = [];
 
-//     Object.keys(borders).forEach((key) => {
-//       const { isMerged, mergeWith } = borders[key];
+    Object.keys(borders).forEach((key) => {
+      const { isMerged, mergeWith } = borders[key];
 
-//       if (isMerged === true) {
-//         return;
-//       }
+      if (isMerged === true) {
+        return;
+      }
 
-//       const [x1, x2, y3, y4] = compareBorder([key, ...mergeWith]);
+      const [x1, x2, y3, y4] = compareBorder([key, ...mergeWith]);
 
-//       sortedBorderArray.push([[x1, y3], [x2, y3], [x2, y4], [x1, y4]]);
-//     })
+      sortedBorderArray.push([[x1, y3], [x2, y3], [x2, y4], [x1, y4]]);
+    })
 
-//     return sortedBorderArray;
-//   }
+    return sortedBorderArray;
+  }
 
-//   for (let y = 0; y < height + 1; y += 1) {
-//     let prev = 0; // class of prev
+  for (let y = 0; y < height + 1; y += 1) {
+    let prev = 0; // class of prev
 
-//     for (let x = 0; x < width + 1; x += 1) {
-//       const val = getXorValue(x, y);
+    for (let x = 0; x < width + 1; x += 1) {
+      const val = getXorValue(x, y);
+      const top = getClassValue(x, y - 1); // class of top
 
-//       if (val === 0) {
-//         if (prev !== 0) {
-//           // add prev point to the right border
+      if (val === 0) {
+        if (prev !== 0) {
+          // add prev point to the right border
 
-//           borders[prev].right.push(x - 1);
+          borders[prev].right.push(x - 1);
 
-//           borderConnect(
-//             getClassValue(x - 2, y),
-//             getClassValue(x - 2, y - 1),
-//             getClassValue(x - 1, y - 1),
-//             getClassValue(x, y - 1),
-//           )
+          borderConnect(
+            getClassValue(x - 2, y),
+            getClassValue(x - 2, y - 1),
+            getClassValue(x - 1, y - 1),
+            getClassValue(x, y - 1),
+          )
 
-//           prev = 0;
-//         }
-//       } else {
-//         if (prev === 0) { // [0, 1]
-//           const classOf1st = getClassValue(x - 1, y - 1);
-//           const classOf2nd = getClassValue(x, y - 1);
-//           const classOf3rd = getClassValue(x + 1, y - 1);
-//           const classOfSurround = classOf1st || classOf2nd || classOf3rd || 0;
-//           const classOfCurr = classOfSurround || ++amount;
+          prev = 0;
+        }
 
-//           if (classOfSurround === 0) {
-//             borders[classOfCurr] = {
-//               isMerged: false,
-//               mergeWith: [],
-//               left: [],
-//               right: [],
-//               top: [],
-//               bottom: [],
-//             };
-//           }
+        if (top !== 0) {
+          borders[top].bottom.push(y - 1);
+        }
+      } else {
+        const classOf1st = getClassValue(x - 1, y - 1);
+        const classOf3rd = getClassValue(x + 1, y - 1);
+        const classOfSurround = prev || classOf1st || top || classOf3rd || 0;
+        const classOfCurr = classOfSurround === 0 ? ++amount : classOfSurround;
 
-//           borders[classOfCurr].left.push(x);
+        if (prev === 0) { // [0, 1]
+          if (classOfSurround === 0) {
+            borders[classOfCurr] = {
+              isMerged: false,
+              mergeWith: [],
+              left: [],
+              right: [],
+              top: [],
+              bottom: [],
+            };
+          }
 
-//           classArray[x + y * width] = classOfCurr;
+          borders[classOfCurr].left.push(x);
 
-//           borderConnect(
-//             prev,
-//             getClassValue(x - 1, y - 1),
-//             getClassValue(x, y - 1),
-//             getClassValue(x + 1, y - 1),
-//           )
+          borderConnect(prev, classOf1st, top, classOf3rd);
 
-//           prev = classOfCurr;
-//         } else { // [1, 1]
-//           // class of current equals left
+          setClassValue(x, y, classOfCurr);
 
-//           classArray[x + y * width] = prev;
-//         }
-//       }
-//     }
+          prev = classOfCurr;
+        } else { // [1, 1]
+          // class of current equals left
 
-//     prev = 0;
-//   }
+          setClassValue(x, y, prev);
+        }
 
-//   for (let x = 0; x < width + 1; x += 1) {
-//     let prev = 0;
+        if (top === 0) {
+          borders[classOfCurr].top.push(y);
 
-//     for (let y = 0; y < height + 1; y += 1) {
-//       const val = getXorValue(x, y);
+          borderConnect(prev, classOf1st, top, classOf3rd);
+        }
+      }
+    }
 
-//       if (val === 0) {
-//         if (prev === 0) { // [0, 0]
-//           continue;
-//         } else { // [1, 0]
-//           // add prev point to bottom border
+    prev = 0;
+  }
 
-//           const classOfCurr = getClassValue(x, y - 1);
+  connectBoard();
 
-//           borders[classOfCurr].bottom.push(y - 1);
+  return compareAndSortBorder();
+}
 
-//           prev = 0;
-//         }
-//       } else {
-//         if (prev === 0) { // [0, 1]
-//           // add current point to top border
+const imageXor = (imageData1, imageData2, w, h) => {
+  const data1 = imageData1.data;
+  const data2 = imageData2.data;
+  const xor = (new Array(w * h)).fill(0);
 
-//           const classOfCurr = getClassValue(x, y);
+  for (let i = 0; i < w * h * 4; i += 4) {
+    const isChanged = (data1[i] ^ data2[i]) ||
+      (data1[i + 1] ^ data2[i + 1]) ||
+      (data1[i + 2] ^ data2[i + 2]) ||
+      (data1[i + 3] ^ data2[i + 3]);
 
-//           borders[classOfCurr].top.push(y);
+    if (isChanged !== 0) {
+      xor[i / 4] = 1;
+    }
+  }
 
-//           borderConnect(
-//             getClassValue(x - 1, y),
-//             getClassValue(x - 1, y - 1),
-//             getClassValue(x, y - 1),
-//             getClassValue(x + 1, y - 1),
-//           )
+  return xor;
+}
 
-//           prev = classOfCurr;
-//         } else { // [1, 1]
-//           continue;
-//         }
-//       }
-//     }
+const imageDiff = (ctx1, ctx2, w, h) => {
+  const imageData1 = ctx1.getImageData(0, 0, w, h);
+  const imageData2 = ctx2.getImageData(0, 0, w, h);
 
-//     prev = 0;
-//   }
+  const xorArray = imageXor(imageData1, imageData2, w, h);
 
-//   connectBoard();
+  const time1 = new Date().getTime();
 
-//   const sorted = compareAndSortBorder();
+  for (let i = 0; i < 1; i += 1) {
+    func(xorArray, w, h);
+  }
 
-//   // console.log('combinedArray:');
-//   // console.log(sorted);
+  console.log((new Date().getTime()) - time1);
 
-//   // console.log('borders:');
-//   // console.log(borders);
-// }
+  const borders = func(xorArray, w, h);
 
-// // func();
-
-// const time1 = new Date().getTime();
-
-// for (let i = 0; i < 100000; i += 1) {
-//   func();
-// }
-
-// console.log((new Date().getTime()) - time1);
-
-// // });
+  return borders;
+}

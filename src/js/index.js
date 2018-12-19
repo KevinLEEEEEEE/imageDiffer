@@ -70,7 +70,7 @@
 // ];
 // const xorArray = []; // 320 * 320
 // const width = 320;
-// const height = xorArray.length / width;
+// const height = 320;
 
 // for (let i = 0; i < 512; i += 1) {
 //   xorArray.push(...xorTemplate);

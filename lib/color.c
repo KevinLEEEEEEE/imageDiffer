@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define SIZE_OF_RGBA 4;
 
@@ -37,13 +38,14 @@ typedef struct item
   struct item *next;
 } Item;
 
-typedef struct arrayItem
+typedef struct doubleItem
 {
-  int value[2];
-  struct arrayitem *next;
-} ArrayItem;
+  int value1;
+  int value2;
+  struct doubleitem *next;
+} DoubleItem;
 
-typedef ArrayItem *ArrayItemList;
+typedef DoubleItem *DoubleItemList;
 
 typedef struct border
 {
@@ -95,7 +97,9 @@ int testBit(uint8_t array[], int k)
 
 int getXorValue(uint8_t array[], int width, int height, int x, int y)
 {
-  return (x >= width || y >= height) ? 0 : testBit(array, x + width * y);
+  // return (x >= width || y >= height) ? 0 : testBit(array, x + width * y);
+
+  return (x >= width || y >= height) ? 0 : array[y * width + x];
 }
 
 void swap(int *p1, int *p2)
@@ -166,18 +170,79 @@ void addPoint(int klass, int val, enum borderType type, BorderList *plist)
   } while (scan != NULL);
 }
 
-void borderConnect(int k1, int k2, int k3, int k4)
+void pushValueIntoConnects(int k1, int k2, DoubleItemList *plist)
 {
+  // printf("remove duplicate and sorted value: %d, %d\n", k1, k2);
+
+  DoubleItem *pnew = (DoubleItem *)malloc(sizeof(DoubleItem));
+
+  pnew->value1 = k1 < k2 ? k2 : k1;
+  pnew->value2 = k1 > k2 ? k2 : k1;
+  pnew->next = NULL;
+
+  DoubleItem *scan = *plist;
+
+  if (scan == NULL)
+  {
+    *plist = pnew;
+  }
+  else
+  {
+    while (scan->next != NULL)
+    {
+      scan = scan->next;
+    }
+
+    scan->next = pnew;
+  }
+}
+
+void borderConnect(int borderArray[], DoubleItemList *plist)
+{
+  // printf("border connect: %d, %d, %d, %d\n", borderArray[0], borderArray[1], borderArray[2], borderArray[3]);
+
+  int canBreak = 0;
+
+  for (int i = 0; i < 4; i++)
+  {
+    int currVal = borderArray[i];
+
+    if (currVal == 0)
+    {
+      continue;
+    }
+
+    for (int j = i + i; j < 4; j++)
+    {
+      int targetVal = borderArray[j];
+
+      if (currVal != targetVal && targetVal != 0)
+      {
+        pushValueIntoConnects(currVal, targetVal, plist);
+
+        canBreak = 1;
+
+        break;
+      }
+    }
+
+    if (canBreak == 1)
+    {
+      break;
+    }
+  }
 }
 
 EM_PORT_API(uint8_t *)
 pixelDataXOR(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 {
   const int pixelArraySize = width * height * SIZE_OF_RGBA;
-  const int bitArraySize = ceil((width * height) / 8) * 8;
-  uint8_t *const bitArray = (uint8_t *)malloc(bitArraySize);
+  // const int bitArraySize = ceil((width * height) / 8) * 8;
+  // uint8_t *const bitArray = (uint8_t *)malloc(bitArraySize);
 
-  memset(bitArray, 0, bitArraySize);
+  uint8_t *const bitArray = calloc(width * height, sizeof(uint8_t));
+
+  // memset(bitArray, 0, bitArraySize);
 
   for (int i = 0; i < pixelArraySize; i += 4)
   {
@@ -188,21 +253,23 @@ pixelDataXOR(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 
     if (isChanged != 0)
     {
-      setBit(bitArray, i / 4);
+      // setBit(bitArray, i / 4);
+
+      bitArray[i / 4] = 1;
     }
   }
 
   return bitArray;
 }
 
-EM_PORT_API(uint8_t *)
+EM_PORT_API(int)
 imagediff(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 {
   const uint8_t *const xorArray = pixelDataXOR(pixelData1, pixelData2, width, height);
-  int *prevClass = (int *)calloc(width + 2, sizeof(int));
-  int *currClass = (int *)calloc(width + 2, sizeof(int));
+  int *prevClasses = (int *)calloc(width + 2, sizeof(int));
+  int *currClasses = (int *)calloc(width + 2, sizeof(int));
   int amount = 0;
-  ArrayItemList *connects = NULL;
+  DoubleItemList *connects = NULL;
   BorderList *borders = NULL;
 
   for (int y = 0; y < height + 1; y++)
@@ -211,28 +278,30 @@ imagediff(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
     {
       int realX = x - 1;
       int xorVal = getXorValue(xorArray, width, height, realX, y);
-      int classOfLeft = currClass[x - 1];
-      int classOfTop = prevClass[x];
+      int classOfLeft = currClasses[x - 1];
+      int classOfTop = prevClasses[x];
 
       if (xorVal == 0)
       {
         if (classOfLeft != 0) // left point is 【right】 border
         {
-          addPoint(currClass[x - 1], realX - 1, right, &borders);
+          addPoint(currClasses[x - 1], realX - 1, right, &borders);
 
-          borderConnect();
+          int borderArray[] = {currClasses[x - 2], prevClasses[x - 2], prevClasses[x - 1], prevClasses[x]};
+
+          borderConnect(borderArray, &connects);
         }
 
         if (classOfTop != 0) // top point is 【bottom】 border
         {
-          addPoint(prevClass[x], y - 1, bottom, &borders);
+          addPoint(prevClasses[x], y - 1, bottom, &borders);
         }
 
-        currClass[x] = 0;
+        currClasses[x] = 0;
       }
       else
       {
-        int classOfSurround = classOfLeft || prevClass[x - 1] || classOfTop || prevClass[x + 1];
+        int classOfSurround = classOfLeft || prevClasses[x - 1] || classOfTop || prevClasses[x + 1];
         int classOfCurr = classOfSurround == 0 ? ++amount : classOfSurround;
 
         if (classOfLeft == 0) // current point is 【left】 border
@@ -244,79 +313,114 @@ imagediff(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 
           addPoint(classOfCurr, realX, left, &borders);
 
-          borderConnect();
+          int borderArray[] = {currClasses[x - 1], prevClasses[x - 1], prevClasses[x], prevClasses[x + 1]};
+
+          borderConnect(borderArray, &connects);
         }
 
         if (classOfTop == 0) // current point is 【top】 border
         {
           addPoint(classOfCurr, y, top, &borders);
 
-          if (classOfLeft != 0) // no border connect before
+          if (classOfLeft != 0) // remove duplicate connection
           {
-            borderConnect();
+            int borderArray[] = {currClasses[x - 1], prevClasses[x - 1], prevClasses[x], prevClasses[x + 1]};
+
+            borderConnect(borderArray, &connects);
           }
         }
 
-        currClass[x] = classOfCurr;
+        currClasses[x] = classOfCurr;
       }
     }
 
-    swap(&prevClass, &currClass);
+    swap(&prevClasses, &currClasses);
   }
 
-  // print values
+  free(prevClasses);
+  free(currClasses);
+  free(connects);
+  free(borders);
+  free(xorArray);
 
-  Border *scan = borders;
-
-  printf("klass: %d\n", scan->klass);
-
-  Item *scan2 = scan->border;
-
-  printf("value: %d, type: %d\n", scan2->value, scan2->type);
-
-  while (scan2->next != NULL)
-  {
-    scan2 = scan2->next;
-
-    printf("value: %d, type: %d\n", scan2->value, scan2->type);
-  }
-
-  while (scan->next != NULL)
-  {
-    scan = scan->next;
-
-    printf("klass: %d\n", scan->klass);
-
-    Item *scan3 = scan->border;
-
-    printf("value: %d, type: %d\n", scan3->value, scan3->type);
-
-    while (scan3->next != NULL)
-    {
-      scan3 = scan3->next;
-
-      printf("value: %d, type: %d\n", scan3->value, scan3->type);
-    }
-  }
+  return amount;
 }
 
-void main()
+EM_PORT_API(int)
+imageDiffTest(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 {
-  uint8_t arr1[32] = {
-      1, 0, 0, 0, 0, 0, 0, 0,
-      0, 1, 0, 0, 0, 0, 0, 0,
-      0, 0, 1, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 1, 0, 0, 0};
+  time_t starttime = time(NULL);
 
-  uint8_t arr2[32] = {
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0};
+  for (int i = 0; i < 100; i++)
+  {
+    imagediff(pixelData1, pixelData2, width, height);
+  }
 
-  imagediff(arr1, arr2, 4, 2);
+  time_t endtime = time(NULL);
 
-  system("pause");
+  return (int)difftime(endtime, starttime);
 }
+
+// void main()
+// {
+//   const uint8_t template[] = {
+//       0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
+//       0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
+//       0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+//       0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+//       0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+//       0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
+//       0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+//       0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+//       1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+//       1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+//   uint8_t arr3[102400 * 4];
+
+//   for (int a = 0; a < 102400 * 4; a++)
+//   {
+//     arr3[a] = template[a % 200];
+//     arr3[a + 1] = template[a % 200 + 1];
+//     arr3[a + 2] = template[a % 200 + 2];
+//     arr3[a + 3] = template[a % 200 + 3];
+//   }
+
+//   const uint8_t arr4[102400 * 4] = {0};
+
+//   // uint8_t arr1[64] = {
+//   //     1, 0, 0, 0, 0, 0, 0, 0,
+//   //     0, 1, 0, 0, 0, 0, 0, 0,
+//   //     0, 0, 1, 0, 1, 0, 0, 0,
+//   //     0, 0, 0, 0, 1, 0, 0, 0,
+//   //     1, 0, 0, 0, 0, 0, 0, 0,
+//   //     0, 1, 0, 0, 0, 0, 0, 0,
+//   //     0, 0, 1, 0, 1, 0, 0, 0,
+//   //     0, 0, 0, 0, 1, 0, 0, 0};
+
+//   // uint8_t arr2[64] = {
+//   //     0, 0, 0, 0, 0, 0, 0, 0,
+//   //     0, 0, 0, 0, 0, 0, 0, 0,
+//   //     0, 0, 0, 0, 0, 0, 0, 0,
+//   //     0, 0, 0, 0, 0, 0, 0, 0,
+//   //     0, 0, 0, 0, 0, 0, 0, 0,
+//   //     0, 0, 0, 0, 0, 0, 0, 0,
+//   //     0, 0, 0, 0, 0, 0, 0, 0,
+//   //     0, 0, 0, 0, 0, 0, 0, 0};
+
+//   time_t starttime = clock();
+
+//   for (int a = 0; a < 1000; a++)
+//   {
+//     imagediff(arr4, arr3, 320, 320);
+//   }
+
+//   time_t endtime = clock();
+
+//   double durationtime = (double)(endtime - starttime);
+
+//   printf("time: %f", difftime(endtime, starttime));
+
+//   system("pause");
+// }
 
 // emcc color.c -O1 -s WASM=1 -s MODULARIZE=1 -s ASSERTIONS=1 -s "EXTRA_EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'getValue', 'setValue']" -o color.js

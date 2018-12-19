@@ -9,9 +9,124 @@
 </head>
 
 <body>
+
   <h2>image-diff</h2>
+  <div>
+    <input type="file" name="origin" id="origin">
+    <canvas id="originCanvas">origin</canvas>
+  </div>
+  <div>
+    <input type="file" name="target" id="target">
+    <canvas id="targetCanvas">target</canvas>
+  </div>
+
+  <button id="diff">diff</button>
+
   <script src="./lib/color.js"></script>
-  <script src="./src/js/index3.js" type="module"></script>
+  <script src="./src/js/index3.js"></script>
+  <script>
+    const cvs1 = document.getElementById("originCanvas");
+    const ctx1 = cvs1.getContext("2d");
+    const cvs2 = document.getElementById("targetCanvas");
+    const ctx2 = cvs2.getContext("2d");
+
+    const getBase64 = (e) => {
+      const file = e.target.files[0];
+
+      return window.URL.createObjectURL(file);
+    }
+
+    const convertBase64ToImage = (base64) => {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+
+        image.onload = () => {
+          resolve(image);
+        };
+
+        image.onerror = (error) => {
+          reject(error);
+        };
+
+        image.src = base64;
+      });
+    };
+
+    const drawBorders = (array) => {
+      array.forEach(ele => {
+        ctx1.beginPath();
+        ctx1.strokeStyle = "red";
+        ctx1.rect(ele[0][0] - 1, ele[0][1] - 1, ele[1][0] - ele[0][0] + 2, ele[3][1] - ele[0][1] + 2);
+        ctx1.stroke();
+        ctx1.closePath();
+
+        ctx2.beginPath();
+        ctx2.strokeStyle = "red";
+        ctx2.rect(ele[0][0] - 1, ele[0][1] - 1, ele[1][0] - ele[0][0] + 2, ele[3][1] - ele[0][1] + 2);
+        ctx2.stroke();
+        ctx2.closePath();
+      });
+    }
+
+    document.getElementById("origin").addEventListener("change", (e) => {
+      const base64 = getBase64(e);
+
+      convertBase64ToImage(base64)
+        .then((img) => {
+          const { width, height } = img;
+
+          cvs1.width = width;
+          cvs1.height = height;
+
+          ctx1.drawImage(img, 0, 0);
+        })
+    })
+
+    document.getElementById("target").addEventListener("change", (e) => {
+      const base64 = getBase64(e);
+
+      convertBase64ToImage(base64)
+        .then((img) => {
+          const { width, height } = img;
+
+          cvs2.width = width;
+          cvs2.height = height;
+
+          ctx2.drawImage(img, 0, 0);
+        })
+    })
+
+    document.getElementById("diff").addEventListener("click", () => {
+      const diffArray = imageDiff(ctx1, ctx2, cvs1.width, cvs2.width);
+
+      drawBorders(diffArray);
+
+      // const { width, height } = cvs1;
+      // const heapType = 'HEAPU8';
+      // const bytesPerElememmt = Uint8Array.BYTES_PER_ELEMENT;
+
+      // const array1 = ctx1.getImageData(0, 0, width, height).data;
+      // const array2 = ctx2.getImageData(0, 0, width, height).data;
+
+      // window['Module']().then((exported) => {
+      //   const time1 = new Date().getTime();
+
+      //   const pointer = exported.ccall('imageDiffTest', 'number', ['array', 'array', 'number', 'number'], [array1, array2, width, height]);
+
+      //   console.log((new Date().getTime()) - time1,  pointer);
+
+      //   // console.log(exported, pointer);
+
+      //   // const res = [];
+
+      //   // for (let i = 0; i < width * height; i += 1) {
+      //   //   res.push(exported[heapType][pointer / bytesPerElememmt + i]);
+      //   // }
+
+      //   // console.log(res);
+      // })
+    })
+  </script>
 </body>
 
 </html>
