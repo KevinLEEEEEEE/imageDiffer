@@ -203,7 +203,7 @@ const imageDiff = (ctx1, ctx2, w, h) => {
 
   const time1 = new Date().getTime();
 
-  for (let i = 0; i < 1; i += 1) {
+  for (let i = 0; i < 1000; i += 1) {
     func(xorArray, w, h);
   }
 
