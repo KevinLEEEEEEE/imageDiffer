@@ -201,13 +201,13 @@ const imageDiff = (ctx1, ctx2, w, h) => {
 
   const xorArray = imageXor(imageData1, imageData2, w, h);
 
-  const time1 = new Date().getTime();
+  // const time1 = new Date().getTime();
 
-  for (let i = 0; i < 1000; i += 1) {
-    func(xorArray, w, h);
-  }
+  // for (let i = 0; i < 1000; i += 1) {
+  //   func(xorArray, w, h);
+  // }
 
-  console.log((new Date().getTime()) - time1);
+  // console.log((new Date().getTime()) - time1);
 
   const borders = func(xorArray, w, h);
 
