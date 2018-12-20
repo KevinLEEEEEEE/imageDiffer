@@ -61,12 +61,12 @@ typedef struct border
 
 typedef Border *BorderList;
 
-// void swap(int *p1, int *p2)
-// {
-//   int tmp = *p1;
-//   *p1 = *p2;
-//   *p2 = tmp;
-// }
+void swap(int *p1, int *p2)
+{
+  int tmp = *p1;
+  *p1 = *p2;
+  *p2 = tmp;
+}
 
 void addBorder(int klass, int width, int height, BorderList *plist)
 {
@@ -292,7 +292,7 @@ imagediff(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
       }
     }
 
-    // swap(&prevClasses, &currClasses);
+    swap(&prevClasses, &currClasses);
   }
 
   Border *scan = borders;
@@ -312,10 +312,10 @@ imagediff(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 EM_PORT_API(void)
 imageDiffTest(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 {
-  // for (int i = 0; i < 1000; i++)
+  // for (int i = 0; i < 10; i++)
   // {
 
-  imagediff(pixelData1, pixelData2, width, height);
+    imagediff(pixelData1, pixelData2, width, height);
 
   // uint8_t ** xor = pixelDataXOR((uint32_t)pixelData1, (uint32_t)pixelData2, width, height);
 
@@ -330,29 +330,29 @@ imageDiffTest(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 
 void main()
 {
-  // const uint8_t template[] = {
-  //     0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
-  //     0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
-  //     0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  //     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  //     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
-  //     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
-  //     0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  //     0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-  //     1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
-  //     1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  const uint8_t template[] = {
+      0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
+      0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+      0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
+      0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+      1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+      1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  // uint8_t arr3[102400 * 4];
+  uint8_t arr3[102400 * 4];
 
-  // for (int a = 0; a < 102400 * 4; a++)
-  // {
-  //   arr3[a] = template[a % 200];
-  //   arr3[a + 1] = template[a % 200 + 1];
-  //   arr3[a + 2] = template[a % 200 + 2];
-  //   arr3[a + 3] = template[a % 200 + 3];
-  // }
+  for (int a = 0; a < 102400 * 4; a++)
+  {
+    arr3[a] = template[a % 200];
+    arr3[a + 1] = template[a % 200 + 1];
+    arr3[a + 2] = template[a % 200 + 2];
+    arr3[a + 3] = template[a % 200 + 3];
+  }
 
-  // const uint8_t arr4[102400 * 4] = {0};
+  const uint8_t arr4[102400 * 4] = {0};
 
   uint8_t arr1[64] = {
       1, 0, 0, 0, 0, 0, 0, 0,
@@ -374,13 +374,13 @@ void main()
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0};
 
-  // time_t starttime = clock();
+  time_t starttime = clock();
 
   imageDiffTest(arr1, arr2, 4, 4);
 
-  // time_t endtime = clock();
+  time_t endtime = clock();
 
-  // printf("time: %f", difftime(endtime, starttime));
+  printf("time: %f", difftime(endtime, starttime));
 
   system("pause");
 }
