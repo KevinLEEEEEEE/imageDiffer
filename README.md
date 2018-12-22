@@ -3,6 +3,12 @@ ImageDiffer
 
 **An app that helps you find different parts between two images**
 
+## about the design
+
+so, I spend all of my time in producing the ppt, the design of the web is not that important here~
+
+![design](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/design.png)
+
 ## introducing basic info
 
 ![basic concepts of imagediff](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/1.png)
