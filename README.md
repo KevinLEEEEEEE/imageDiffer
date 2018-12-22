@@ -10,6 +10,8 @@ ImageDiffer
 
 ## introducing basic concepts
 
+the detailed explaination can be found in "/src/image/*.ppt", help yourself~
+
 ![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/3.png)
 ![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/4.png)
 ![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/5.png)
