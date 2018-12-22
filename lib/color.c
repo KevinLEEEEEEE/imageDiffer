@@ -15,10 +15,8 @@
 #endif
 #endif
 
-#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
 
 #define SIZE_OF_RGBA 4;
@@ -31,27 +29,17 @@ enum borderType
   bottom
 };
 
-typedef struct mergeItem
+typedef struct connect
 {
-  int value;
-  enum borderType type;
-  struct item *next;
-} MergeItem;
-
-typedef struct connectItem
-{
-  int target;
   int merge;
-  struct doubleitem *next;
-} ConnectItem;
-
-typedef ConnectItem *ConnectList;
+  int to;
+  struct connect *next;
+} Connect;
 
 typedef struct border
 {
   int klass;
   int isMerged;
-  MergeItem *mergeWith;
   int left;
   int right;
   int top;
@@ -59,23 +47,20 @@ typedef struct border
   struct border *next;
 } Border;
 
-typedef Border *BorderList;
-
-void swap(int *p1, int *p2)
+void swap(int **p1, int **p2)
 {
-  int tmp = *p1;
+  int *tmp = *p1;
   *p1 = *p2;
   *p2 = tmp;
 }
 
-void addBorder(int klass, int width, int height, BorderList *plist)
+void addBorder(int klass, int width, int height, Border *pointer)
 {
   Border *pnew = (Border *)malloc(sizeof(Border));
-  Border *scan = *plist;
+  Border *scan = pointer;
 
   pnew->klass = klass;
   pnew->isMerged = 0;
-  pnew->mergeWith = NULL;
   pnew->next = NULL;
 
   pnew->left = width;
@@ -83,122 +68,189 @@ void addBorder(int klass, int width, int height, BorderList *plist)
   pnew->top = height;
   pnew->bottom = 0;
 
-  if (scan != NULL)
+  while (scan->next != NULL)
   {
+    scan = scan->next;
+  }
+
+  scan->next = pnew;
+}
+
+void addPoint(int klass, int val, enum borderType type, Border *pointer)
+{
+  Border *scan = pointer;
+
+  do
+  {
+    scan = scan->next;
+
+    if (scan->klass == klass)
+    {
+      switch (type)
+      {
+      case left:
+        if (scan->left > val)
+          scan->left = val;
+        break;
+      case right:
+        if (scan->right < val)
+          scan->right = val;
+        break;
+      case top:
+        if (scan->top > val)
+          scan->top = val;
+        break;
+      case bottom:
+        if (scan->bottom < val)
+          scan->bottom = val;
+        break;
+      default:
+        break;
+      }
+
+      break;
+    }
+  } while (scan->next != NULL);
+}
+
+int removeDuplicateAndZero(int borderArray[], Connect *pnew)
+{
+  for (int i = 0; i < 4; i++)
+  {
+    int currVal = borderArray[i];
+
+    if (currVal == 0)
+    {
+      continue;
+    }
+
+    for (int j = i + 1; j < 4; j++)
+    {
+      int targetVal = borderArray[j];
+
+      if (currVal != targetVal && targetVal != 0)
+      {
+        pnew->merge = currVal < targetVal ? currVal : targetVal; // small number
+        pnew->to = currVal > targetVal ? currVal : targetVal;    // large number
+        pnew->next = NULL;
+
+        return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
+void addConnect(int borderArray[], Connect *pointer)
+{
+  Connect *pnew = (Connect *)malloc(sizeof(Connect));
+  int state = removeDuplicateAndZero(borderArray, pnew);
+
+  if (state != 0)
+  {
+    Connect *scan = pointer;
+
     while (scan->next != NULL)
     {
       scan = scan->next;
+
+      if (scan->merge == pnew->merge && scan->to == pnew->to) // remove duplicate connection
+      {
+        return;
+      }
     }
 
     scan->next = pnew;
   }
-  else
+}
+
+void connectBorderBetween(int merge, int to, Border *pointer)
+{
+  Border *scan = pointer;
+  Border *pMerge = NULL, *pTo = NULL;
+
+  while (scan->next != NULL)
   {
-    *plist = pnew;
+    scan = scan->next;
+
+    if (scan->klass == merge)
+    {
+      pMerge = scan;
+    }
+    else if (scan->klass == to)
+    {
+      pTo = scan;
+    }
+  }
+
+  if (pMerge->isMerged == 1)
+  {
+    return;
+  }
+
+  pMerge->isMerged = 1;
+
+  if (pMerge->left < pTo->left)
+  {
+    pTo->left = pMerge->left;
+  }
+
+  if (pMerge->right > pTo->right)
+  {
+    pTo->right = pMerge->right;
+  }
+
+  if (pMerge->top < pTo->top)
+  {
+    pTo->top = pMerge->top;
+  }
+
+  if (pMerge->bottom > pTo->bottom)
+  {
+    pTo->bottom = pMerge->bottom;
   }
 }
 
-// void addPoint(int klass, int val, enum borderType type, BorderList *plist)
-// {
-//   Border *scan = *plist;
+void connectBorders(Border *pBorder, Connect *pConnect)
+{
+  Connect *scan = pConnect;
 
-//   do
-//   {
-//     if (scan->klass == klass)
-//     {
-//       switch (type)
-//       {
-//       case left:
-//         if (scan->left > val)
-//           scan->left = val;
-//         break;
-//       case right:
-//         if (scan->right < val)
-//           scan->right = val;
-//         break;
-//       case top:
-//         if (scan->top > val)
-//           scan->top = val;
-//         break;
-//       case bottom:
-//         if (scan->bottom < val)
-//           scan->bottom = val;
-//         break;
-//       default:
-//       }
+  while (scan->next != NULL)
+  {
+    scan = scan->next;
 
-//       printf("add point: klass %d, val %d", klass, val);
-//     }
+    connectBorderBetween(scan->merge, scan->to, pBorder);
+  }
+}
 
-//     scan = scan->next;
-//   } while (scan != NULL);
-// }
+Border *initBorderList()
+{
+  Border *first = (Border *)malloc(sizeof(Border));
 
-// void pushValueIntoConnects(int k1, int k2, DoubleItemList *plist)
-// {
-//   // printf("remove duplicate and sorted value: %d, %d\n", k1, k2);
+  first->klass = 0;
+  first->next = NULL;
 
-//   DoubleItem *pnew = (DoubleItem *)malloc(sizeof(DoubleItem));
+  return first;
+}
 
-//   pnew->value1 = k1 < k2 ? k2 : k1;
-//   pnew->value2 = k1 > k2 ? k2 : k1;
-//   pnew->next = NULL;
+Connect *initConnectList()
+{
+  Connect *first = (Connect *)malloc(sizeof(Connect));
 
-//   DoubleItem *scan = *plist;
+  first->next = NULL;
+  first->merge = 0;
+  first->to = 0;
 
-//   if (scan == NULL)
-//   {
-//     *plist = pnew;
-//   }
-//   else
-//   {
-//     while (scan->next != NULL)
-//     {
-//       scan = scan->next;
-//     }
+  return first;
+}
 
-//     scan->next = pnew;
-//   }
-// }
+int *initClasses(int size)
+{
+  return (int *)calloc(size, sizeof(int));
+}
 
-// void borderConnect(int borderArray[], DoubleItemList *plist)
-// {
-//   // printf("border connect: %d, %d, %d, %d\n", borderArray[0], borderArray[1], borderArray[2], borderArray[3]);
-
-//   int canBreak = 0;
-
-//   for (int i = 0; i < 4; i++)
-//   {
-//     int currVal = borderArray[i];
-
-//     if (currVal == 0)
-//     {
-//       continue;
-//     }
-
-//     for (int j = i + i; j < 4; j++)
-//     {
-//       int targetVal = borderArray[j];
-
-//       if (currVal != targetVal && targetVal != 0)
-//       {
-//         pushValueIntoConnects(currVal, targetVal, plist);
-
-//         canBreak = 1;
-
-//         break;
-//       }
-//     }
-
-//     if (canBreak == 1)
-//     {
-//       break;
-//     }
-//   }
-// }
-
-EM_PORT_API(uint8_t **)
-pixelDataXOR(uint32_t pixelData1[], uint32_t pixelData2[], int width, int height)
+uint8_t **pixelDataXOR(uint32_t pixelData1[], uint32_t pixelData2[], int width, int height)
 {
   uint8_t **xorArray = (uint8_t **)malloc((height + 1) * sizeof(uint8_t *));
 
@@ -220,15 +272,27 @@ pixelDataXOR(uint32_t pixelData1[], uint32_t pixelData2[], int width, int height
   return xorArray;
 }
 
+void printBorders(Border *pointer)
+{
+  Border *scan = pointer;
+
+  while (scan->next != NULL)
+  {
+    scan = scan->next;
+
+    printf("klass: %d, isMerged: %d, left: %d, right: %d, top: %d, bottom: %d\n", scan->klass, scan->isMerged, scan->left, scan->right, scan->top, scan->bottom);
+  }
+}
+
 EM_PORT_API(void)
 imagediff(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
 {
   uint8_t **xorArray = pixelDataXOR((uint32_t)pixelData1, (uint32_t)pixelData2, width, height);
-  int *prevClasses = (int *)calloc(width + 2, sizeof(int));
-  int *currClasses = (int *)calloc(width + 2, sizeof(int));
+  int *prevClasses = initClasses(width + 2);
+  int *currClasses = initClasses(width + 2);
   int amount = 0;
-  ConnectList *connects = NULL;
-  BorderList *borders = NULL;
+  Connect *connects = initConnectList();
+  Border *borders = initBorderList();
 
   for (int y = 0; y < height + 1; y++)
   {
@@ -243,48 +307,48 @@ imagediff(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
       {
         if (classOfLeft != 0) // left point is 【right】 border
         {
-          // addPoint(currClasses[classX - 1], x - 1, right, &borders);
+          addPoint(currClasses[classX - 1], x - 1, right, borders);
 
-          // int borderArray[] = {currClasses[classX - 2], prevClasses[classX - 2], prevClasses[classX - 1], prevClasses[classX]};
+          int borderArray[4] = {currClasses[classX - 2], prevClasses[classX - 2], prevClasses[classX - 1], prevClasses[classX]};
 
-          // borderConnect(borderArray, &connects);
+          addConnect(borderArray, connects);
         }
 
         if (classOfTop != 0) // top point is 【bottom】 border
         {
-          // addPoint(prevClasses[classX], y - 1, bottom, &borders);
+          addPoint(prevClasses[classX], y - 1, bottom, borders);
         }
 
         currClasses[classX] = 0;
       }
       else
       {
-        int classOfSurround = classOfLeft || prevClasses[classX - 1] || classOfTop || prevClasses[classX + 1];
+        int classOfSurround = classOfLeft != 0 ? classOfLeft : prevClasses[classX - 1] != 0 ? prevClasses[classX - 1] : classOfTop != 0 ? classOfTop : prevClasses[classX + 1];
         int classOfCurr = classOfSurround == 0 ? ++amount : classOfSurround;
 
         if (classOfLeft == 0) // current point is 【left】 border
         {
           if (classOfSurround == 0)
           {
-            addBorder(classOfCurr, width, height, &borders);
+            addBorder(classOfCurr, width, height, borders);
           }
 
-          // addPoint(classOfCurr, x, left, &borders);
+          addPoint(classOfCurr, x, left, borders);
 
-          // int borderArray[] = {currClasses[x - 1], prevClasses[x - 1], prevClasses[x], prevClasses[x + 1]};
+          int borderArray[4] = {classOfLeft, prevClasses[classX - 1], classOfTop, prevClasses[classX + 1]};
 
-          // borderConnect(borderArray, &connects);
+          addConnect(borderArray, connects);
         }
 
         if (classOfTop == 0) // current point is 【top】 border
         {
-          // addPoint(classOfCurr, y, top, &borders);
+          addPoint(classOfCurr, y, top, borders);
 
-          if (classOfLeft != 0) // remove duplicate connection
+          if (classOfLeft != 0) // remove duplicate connect
           {
-            // int borderArray[] = {currClasses[x - 1], prevClasses[x - 1], prevClasses[x], prevClasses[x + 1]};
+            int borderArray[4] = {classOfLeft, prevClasses[classX - 1], classOfTop, prevClasses[classX + 1]};
 
-            // borderConnect(borderArray, &connects);
+            addConnect(borderArray, connects);
           }
         }
 
@@ -295,37 +359,15 @@ imagediff(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
     swap(&prevClasses, &currClasses);
   }
 
-  Border *scan = borders;
+  connectBorders(borders, connects);
 
-  printf("klass: %d\n", scan->klass);
+  printBorders(borders);
 
-  scan = scan->next;
-
-  printf("klass: %d\n", scan->klass);
-  // free(prevClasses);
-  // free(currClasses);
-  // free(connects);
-  // free(borders);
-  // free(xorArray);
-}
-
-EM_PORT_API(void)
-imageDiffTest(uint8_t pixelData1[], uint8_t pixelData2[], int width, int height)
-{
-  // for (int i = 0; i < 10; i++)
-  // {
-
-    imagediff(pixelData1, pixelData2, width, height);
-
-  // uint8_t ** xor = pixelDataXOR((uint32_t)pixelData1, (uint32_t)pixelData2, width, height);
-
-  // for (int x = 0; x < width; x++)
-  // {
-  //   for (int y = 0; y < height; y++)
-  //   {
-  //     printf("x: %d, y: %d, val: %d\n", x, y, xor[x][y]);
-  //   }
-  // }
+  free(xorArray);
+  free(prevClasses);
+  free(currClasses);
+  free(borders);
+  free(connects);
 }
 
 void main()
@@ -343,6 +385,7 @@ void main()
       1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   uint8_t arr3[102400 * 4];
+  uint8_t arr4[102400 * 4] = {0};
 
   for (int a = 0; a < 102400 * 4; a++)
   {
@@ -351,8 +394,6 @@ void main()
     arr3[a + 2] = template[a % 200 + 2];
     arr3[a + 3] = template[a % 200 + 3];
   }
-
-  const uint8_t arr4[102400 * 4] = {0};
 
   uint8_t arr1[64] = {
       1, 0, 0, 0, 0, 0, 0, 0,
@@ -376,7 +417,9 @@ void main()
 
   time_t starttime = clock();
 
-  imageDiffTest(arr1, arr2, 4, 4);
+  imagediff(arr1, arr2, 4, 4);
+
+  // imagediff(arr3, arr4, 320, 320);
 
   time_t endtime = clock();
 

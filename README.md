@@ -1,20 +1,33 @@
-colorMixer
+ImageDiffer
 ===========
 
-![image](https://github.com/KevinLEEEEEEE/bookOfDragon/blob/master/src/image/xwz.jpg)
+**An app that helps you find different parts between two images**
 
-> Plain webpack 4 boilerplate with Babel, SASS and lodash on board
+## introducing basic info
+
+![basic concepts of imagediff](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/1.png)
+![authors](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/2.png)
+
+## introducing basic concepts
+
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/3.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/4.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/5.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/6.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/7.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/8.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/9.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/10.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/11.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/12.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/13.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/14.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/15.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/16.png)
+![concepts](https://github.com/KevinLEEEEEEE/imageDiffer/blob/master/src/image/concepts/17.png)
 
 ## Requirements
 You only need <b>node.js</b> pre-installed and you’re good to go. 
-
-If you don’t want to work with lodash, just remove it from the node packages and the webpack config.
-
-## Download
-Download in current directory
-```sh
-$ curl -L -o master.zip https://github.com/cvgellhorn/webpack-boilerplate/archive/master.zip && unzip master.zip && rm master.zip && mv ./webpack-boilerplate-master/{.,}* ./ && rm -r ./webpack-boilerplate-master
-```
 
 ## Setup
 Install dependencies
@@ -32,7 +45,3 @@ Build the current application
 ```sh
 $ npm run build
 ```
-
-## [webpack](https://webpack.js.org/)
-If you're not familiar with webpack, the [webpack-dev-server](https://webpack.js.org/configuration/dev-server/) will serve the static files in your build folder and watch your source files for changes.
-When changes are made the bundle will be recompiled. This modified bundle is served from memory at the relative path specified in publicPath.
